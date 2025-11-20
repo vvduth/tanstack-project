@@ -15,14 +15,19 @@ import EventItem from "./EventItem";
 export default function FindEventSection() {
   const searchElement = useRef();
   // use state to store the search term and to make the query refetch when it changes
-  const [searchTerm, setSearchTerm] = useState("");
+  // set initial state to undefined so that the query does not run on initial render
+  const [searchTerm, setSearchTerm] = useState();
 
-  const { data, isPending, isError, error } = useQuery({
+
+  // isLoading will not be true if teh query is disabled
+  // isPending will be true when the query is refetching
+  const { data, isPending,isLoading, isError, error } = useQuery({
     // use serach term state to refetch data when it changes >= lead to diff querty being as searchterm changes
     queryKey: ["events", { search: searchTerm }],
     // turn the search term into an obj to pass to fetchEvents
     // also get the signal from tanstack to support aborting the request
     queryFn: ({signal}) => fetchEvents({signal, searchTerm}),
+    enabled: searchTerm !== undefined, // only run the query if searchTerm is defined
   });
 
   function handleSubmit(event) {
@@ -32,7 +37,7 @@ export default function FindEventSection() {
 
   let content = <p>Please enter a search term and to find events.</p>;
 
-  if (isPending) {
+  if (isLoading) {
     content = <LoadingIndicator />;
   }
 
