@@ -1,52 +1,40 @@
-import { useEffect, useState } from 'react';
-
-import LoadingIndicator from '../UI/LoadingIndicator.jsx';
-import ErrorBlock from '../UI/ErrorBlock.jsx';
-import EventItem from './EventItem.jsx';
-
+/* eslint-disable no-unused-vars */
+import LoadingIndicator from "../UI/LoadingIndicator.jsx";
+import ErrorBlock from "../UI/ErrorBlock.jsx";
+import EventItem from "./EventItem.jsx";
+import { useQuery } from "@tanstack/react-query";
+import { fetchEvents } from "../../utils/http.js";
 export default function NewEventsSection() {
-  const [data, setData] = useState();
-  const [error, setError] = useState();
-  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    async function fetchEvents() {
-      setIsLoading(true);
-      const response = await fetch('http://localhost:3000/events');
+  // you can controll the query behavior via the 3rd parameter
+  const { data, isPending, isError, error } = useQuery({
+    queryKey: ["events"],
 
-      if (!response.ok) {
-        const error = new Error('An error occurred while fetching the events');
-        error.code = response.status;
-        error.info = await response.json();
-        throw error;
-      }
+    // tanstack pass some def to this query function
+    // in this section the serch qurey will be an object
+    // that gives us info abbout key and signal to abort the request
+    // abort is useful when the component unmounts before the request completes
+    // like we navigate away from the page before the request completes
+    queryFn: fetchEvents,
+    // control after which time react query should refetch the data 
+    staleTime: 1000 * 60, // 1 minute
 
-      const { events } = await response.json();
-
-      return events;
-    }
-
-    fetchEvents()
-      .then((events) => {
-        setData(events);
-      })
-      .catch((error) => {
-        setError(error);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  }, []);
+    // controll how long the cached data should be kept in memory
+    gcTime: 1000 * 60 * 0.5, // 0.5 minutes
+  });
 
   let content;
 
-  if (isLoading) {
+  if (isPending) {
     content = <LoadingIndicator />;
   }
 
   if (error) {
     content = (
-      <ErrorBlock title="An error occurred" message="Failed to fetch events" />
+      <ErrorBlock
+        title="An error occurred"
+        message={error.info?.message || "Failed to fetch events."}
+      />
     );
   }
 
