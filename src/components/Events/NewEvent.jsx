@@ -11,7 +11,7 @@ import Modal from '../UI/Modal.jsx';
 import EventForm from './EventForm.jsx';
 import { createNewEvent } from '../../utils/http.js';
 import ErrorBlock from '../UI/ErrorBlock.jsx';
-
+import { queryClient } from '../../utils/http.js';
 export default function NewEvent() {
   const navigate = useNavigate();
 
@@ -20,19 +20,28 @@ export default function NewEvent() {
   // only run when you call mutate
   const {mutate, isPending, isError, error} = useMutation({
     mutationFn: createNewEvent,
+    // add onSuccess will only be called when the mutation is successful
+    onSuccess: () => {
+      // invalidate the events query to refetch the events list
+      queryClient.invalidateQueries({queryKey: ['events']});
+      navigate('/events')
+    }
   })
 
   function handleSubmit(formData) {
     // call mutate with the form data to create a new event
     // wrap the form data in an obj to match the createNewEvent param
     mutate({
-      eventData: formData
+      event: formData
     });
+    // we can add nagivate here directly, but better to do it in onSuccess
+    // because we want to make sure the event is created before navigating
   }
 
   return (
     <Modal onClose={() => navigate('../')}>
       <EventForm onSubmit={handleSubmit}>
+      
         {isPending && "Submiting..."}
         {!isPending && (
           <>

@@ -1,9 +1,17 @@
+/* eslint-disable no-unused-vars */
 import { useState } from 'react';
-
+import { useQuery } from '@tanstack/react-query';
 import ImagePicker from '../ImagePicker.jsx';
+import { fetchSelectableImages } from '../../utils/http.js';
+import ErrorBlock from '../UI/ErrorBlock.jsx';
 
 export default function EventForm({ inputData, onSubmit, children }) {
   const [selectedImage, setSelectedImage] = useState(inputData?.image);
+
+  const { data, isLoading, isError, error, isPending } = useQuery({
+    queryKey: ['events-images'],
+    queryFn: fetchSelectableImages
+  })
 
   function handleSelectImage(image) {
     setSelectedImage(image);
@@ -31,11 +39,23 @@ export default function EventForm({ inputData, onSubmit, children }) {
       </p>
 
       <div className="control">
-        <ImagePicker
-          images={[]}
+
+        {/* images array is being hardcodded  */}
+        {/* need to replace by fetching images from the server */}
+        {isPending && <p>Loading images...</p>}
+        {isError &&  (
+          <ErrorBlock 
+            title={"Failed to load selectable images"}
+            message={"Could not load images, please try again later."}
+          />
+        )}
+        {data && (
+          <ImagePicker
+          images={data}
           onSelect={handleSelectImage}
           selectedImage={selectedImage}
         />
+        )}
       </div>
 
       <p className="control">
