@@ -8,14 +8,20 @@ export default function NewEventsSection() {
 
   // you can controll the query behavior via the 3rd parameter
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ["events"],
+    queryKey: ["events" ,{
+      max: 3
+    }],
 
     // tanstack pass some def to this query function
     // in this section the serch qurey will be an object
     // that gives us info abbout key and signal to abort the request
     // abort is useful when the component unmounts before the request completes
     // like we navigate away from the page before the request completes
-    queryFn: fetchEvents,
+    // set max to 3 to get only 3 events
+    // pass query key to get the params
+    // in this case we get max from query key to avoid redundancy
+    // use spead operator to get other params in the future
+    queryFn: ({signal,queryKey}) =>  fetchEvents({ signal, ...queryKey[1] }),
     // control after which time react query should refetch the data 
     staleTime: 1000 * 60, // 1 minute
 
